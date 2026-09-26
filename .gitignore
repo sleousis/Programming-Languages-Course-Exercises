@@ -8,6 +8,7 @@ __pycache__/
 *.o
 *.dyn_hi
 *.dyn_o
+.ghc.environment.*
 
 # Compiled programs
 Ex 1/ask1_pure

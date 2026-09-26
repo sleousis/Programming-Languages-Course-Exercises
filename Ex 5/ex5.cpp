@@ -9,7 +9,7 @@
 #define NEXT_INSTRUCTION \
 goto *(void *)(label_tab[*PC]);	
 
-using namespace std;
+using std::swap;
 
 enum OPCODES {
 	HALT = 0x00,JUMP = 0x01,JNZ = 0x02,DUP = 0x03,SWAP = 0x04,DROP = 0x05,PUSH4 = 0x06, PUSH2 = 0x07, PUSH1 = 0x08,	ADD = 0x09,	SUB = 0x0a,	MUL = 0x0b,	DIV = 0x0c,

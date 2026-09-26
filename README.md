@@ -17,10 +17,19 @@ Exercises for the Programming Languages II course at NTUA (National Technical Un
 
 ## Tech stack
 
-- GHC with the `QuickCheck` package
-- g++ (GCC). `ex4.cpp` and `ex5.cpp` use the GCC "labels as values" extension, so they need GCC or Clang. MSVC will not compile them.
-- Python 3 (`requests` and `beautifulsoup4` for Ex 9)
-- PHP for the Ex 9 server
+Tested versions (the latest stable releases in September 2026):
+
+| Tool | Version |
+| --- | --- |
+| GHC | 9.14.1 |
+| cabal-install | 3.18.1.0 |
+| QuickCheck | 2.19.0.0 |
+| GCC (g++) | 16.2.0, with `-std=c++23` |
+| Python | 3.14.7 |
+| requests / beautifulsoup4 | 2.34.2 / 4.15.0 (all pins in `Ex 9/requirements.txt`) |
+| PHP | 8.5.11 |
+
+`ex4.cpp` and `ex5.cpp` use the GCC "labels as values" extension, so they need GCC or Clang. MSVC will not compile them.
 
 ## Repository layout
 
@@ -39,17 +48,30 @@ The `README.txt` files inside `Ex 4`, `Ex 5`, `Ex 7` and `Ex 9` are the original
 
 ## Prerequisites
 
-Linux (tested on Ubuntu 20.04 under WSL):
+The Haskell and C++ parts were run on Linux (Ubuntu 20.04 under WSL). The Python parts and the PHP server were run on both Linux and Windows. Distribution packages on older systems are too old, so the tools came from these sources:
 
-```
-sudo apt-get install ghc libghc-quickcheck2-dev g++ python3 python3-venv php-cli
-```
+- GHC and cabal from [ghcup](https://www.haskell.org/ghcup/):
 
-Windows: the Haskell and C++ parts are easiest to run inside WSL with the packages above. The Ex 4 assembler and the Ex 9 client also run on Windows Python 3.
+  ```
+  ghcup install ghc 9.14.1 --set
+  ghcup install cabal 3.18.1.0 --set
+  cabal update
+  ```
+
+- GCC 16.2 from conda-forge, for example with micromamba:
+
+  ```
+  micromamba create -n gcc16 -c conda-forge gxx_linux-64=16.2.0
+  ```
+
+  The compiler is then called `x86_64-conda-linux-gnu-g++`. Any GCC 16 `g++` works the same way. The commands below just say `g++`.
+
+- Python 3.14.7 from [uv](https://docs.astral.sh/uv/) (`uv python install 3.14.7`) or python.org.
+- PHP 8.5.11. On Windows, use the official zip from windows.php.net. On Linux, it was built from the php.net source tarball with `./configure --disable-all`. The quiz page needs no extensions.
 
 ## Build and run
 
-Run all commands from the folder of the exercise. Compiled programs are ignored by git.
+Run all commands from the folder of the exercise. Compiled programs and GHC environment files are ignored by git.
 
 ### Ex 1
 
@@ -62,22 +84,25 @@ printf '5\nabcba\n' | ./ask1_pure
 printf '5\nabcba\n' | ./ask1_impure
 ```
 
-Both print `13`.
+Both print `13`. GHC 9.14 prints `-Wx-partial` warnings about `head` and `tail` for `ask1_pure.hs`. They are only warnings.
 
 ### Ex 2-3
 
+Install QuickCheck into a package environment in the folder first. GHC picks it up from there automatically.
+
 ```
+cabal install --lib QuickCheck-2.19.0.0 --package-env .
 ghc -O ask2-3.hs
 ./ask2-3
 ```
 
-It runs QuickCheck on every tree and Bird tree property. Every check prints `+++ OK, passed 100 tests.`
+It runs QuickCheck on every tree and Bird tree property. All 12 checks print `+++ OK, passed 100 tests.`
 
 ### Ex 4
 
 ```
 python3 assembler.py test.asb test.b
-g++ ex4.cpp -o ex4
+g++ -std=c++23 -O2 ex4.cpp -o ex4
 ./ex4 test.b
 ```
 
@@ -86,21 +111,21 @@ Output:
 ```
 Hello world!
 *****************
-0.000238
+0.000181
 ```
 
-The last line is the elapsed time, so it varies. The assembler also runs on Windows (`py assembler.py test.asb test.b`). It produces a file identical to the committed `test.b`.
+The last line is the elapsed time, so it varies. The assembler also runs on Windows (`python assembler.py test.asb test.b`). It produces a file identical to the committed `test.b`.
 
 ### Ex 5
 
 `pp.b` is the ping-pong test program from `Ex 5/README.txt` (decoded from its base64 block).
 
 ```
-g++ ex5.cpp -o ex5
+g++ -std=c++23 -O2 ex5.cpp -o ex5
 ./ex5 pp.b
 ```
 
-It prints lines of dots, each ending in `$`, and finally the elapsed time. It took 36 to 48 seconds on the test machine. `Ex 5/README.txt` says `./ex5 test.b`, but the program file is `pp.b`.
+It prints lines of dots, each ending in `$`, and finally the elapsed time. It took 32 to 48 seconds on the test machine. `Ex 5/README.txt` says `./ex5 test.b`, but the program file is `pp.b`.
 
 ### Ex 6
 
@@ -135,26 +160,28 @@ runhaskell ask7.hs < test2
 
 ### Ex 9
 
-Start the server from the `Ex 9` folder. The PHP built-in server works in place of XAMPP:
+Start the server from the `Ex 9` folder with the PHP built-in server. It works in place of XAMPP:
 
 ```
-php -S 127.0.0.1:8099 -t .
+php -d output_buffering=4096 -S 127.0.0.1:8099 -t .
 ```
+
+`palseq.php` sets cookies after it has printed HTML. That only works with output buffering on. XAMPP and the recommended `php.ini` files turn it on (`output_buffering = 4096`). A bare PHP without a `php.ini` does not, and then every request prints "Cannot modify header information" and the quiz never advances.
 
 In another terminal, set up the client in the `Ex 9` folder and run it.
 
 Linux:
 
 ```
-python3 -m venv .venv
+python3.14 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/python client.py http://127.0.0.1:8099/palseq.php
 ```
 
-Windows (PowerShell):
+Windows (PowerShell), with `python` being Python 3.14:
 
 ```
-py -m venv .venv
+python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
 .venv\Scripts\python client.py http://127.0.0.1:8099/palseq.php
 ```
@@ -163,7 +190,7 @@ The client answers ten rounds and ends with `Congratulations! You passed the qui
 
 ## Notes and known limitations
 
-- Tested with GHC 8.6.5, g++ 9.4, Python 3.8 (WSL) and 3.9 (Windows) and PHP 7.4. Newer versions were not tested.
+- The code was first written for GHC 8.x, an older g++ and Python 3 of 2019. The only changes needed for the current versions were a Python 3 `print` fix in `Ex 4/assembler.py` and, in `Ex 5/ex5.cpp`, `using std::swap;` in place of `using namespace std;`. From C++17 on, `std::size` clashes with the global `size` variable.
 - `Ex 7/densem-syntax.hs` is an unfinished draft and does not compile (the type `S` is not defined). It is kept as it was.
 - The PDF files are the assignment texts and reports. Some of them are in Greek.
 - The per-exercise notes run Ex 9 on XAMPP. That setup was not tested. The PHP built-in server was.
