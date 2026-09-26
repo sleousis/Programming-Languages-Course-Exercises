@@ -40,7 +40,7 @@ with open(sys.argv[1], 'rt') as f:
             elif -2**31 <= value < 2**31:
                 counter += 4
             else:
-                print >> sys.stderr, "constant too large:", value
+                print("constant too large:", value, file=sys.stderr)
                 sys.exit(1)
         elif line.startswith('jump') or line.startswith('jnz'):
             counter += 2
@@ -95,7 +95,7 @@ with open(sys.argv[2], 'wb') as f:
                 f.write(opcode['push4'])
                 f.write(value.to_bytes(4, byteorder=byteorder, signed=True))
             else:
-                print >> sys.stderr, "constant too large:", value
+                print("constant too large:", value, file=sys.stderr)
                 sys.exit(1)
         elif instr.startswith('jump') or instr.startswith("jnz"):
             words = instr.split()

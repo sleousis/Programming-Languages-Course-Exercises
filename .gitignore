@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Haskell build output
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+
+# Compiled programs
+Ex 1/ask1_pure
+Ex 1/ask1_impure
+Ex 2-3/ask2-3
+Ex 6/ask6
+Ex 6/read-typeinfer
+Ex 7/ask7
+Ex 4/ex4
+Ex 5/ex5
+*.exe
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
