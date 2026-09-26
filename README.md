@@ -93,14 +93,14 @@ The last line is the elapsed time, so it varies. The assembler also runs on Wind
 
 ### Ex 5
 
-The committed `pp.b` is not the ping-pong test program. Create it first as shown in `Ex 5/README.txt` (a base64 block piped through `zcat`). Then:
+`pp.b` is the ping-pong test program from `Ex 5/README.txt` (decoded from its base64 block).
 
 ```
 g++ ex5.cpp -o ex5
 ./ex5 pp.b
 ```
 
-It prints lines of dots, each ending in `$`, and finally the elapsed time. It took about 36 seconds on the test machine. `Ex 5/README.txt` says `./ex5 test.b`, but the file it creates is `pp.b`.
+It prints lines of dots, each ending in `$`, and finally the elapsed time. It took 36 to 48 seconds on the test machine. `Ex 5/README.txt` says `./ex5 test.b`, but the program file is `pp.b`.
 
 ### Ex 6
 
