@@ -1,0 +1,164 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GHC_VERSION: '9.14.1'
+  CABAL_VERSION: '3.18.1.0'
+  QUICKCHECK: 'QuickCheck-2.19.0.0'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: haskell-actions/setup@v2
+        with:
+          ghc-version: ${{ env.GHC_VERSION }}
+          cabal-version: ${{ env.CABAL_VERSION }}
+
+      - name: Install static libraries
+        run: sudo apt-get update && sudo apt-get install -y libgmp-dev libffi-dev
+
+      - uses: mamba-org/setup-micromamba@v3
+        with:
+          environment-name: gcc16
+          create-args: -c conda-forge gxx_linux-64=16.2.0 sysroot_linux-64=2.28
+          init-shell: none
+
+      - name: Build Haskell programs
+        shell: bash
+        run: |
+          mkdir -p out
+          FLAGS="-O -static -optl-static -optl-pthread -optl-fuse-ld=bfd"
+          (cd "Ex 2-3" && cabal update && cabal install --lib "$QUICKCHECK" --package-env .)
+          ghc $FLAGS "Ex 1/ask1_pure.hs" -o out/ask1_pure
+          ghc $FLAGS "Ex 1/ask1_impure.hs" -o out/ask1_impure
+          (cd "Ex 2-3" && ghc $FLAGS ask2-3.hs -o ../out/ask2-3)
+          ghc $FLAGS "Ex 6/ask6.hs" -o out/ask6
+          ghc $FLAGS "Ex 7/ask7.hs" -o out/ask7
+
+      - name: Build C++ programs
+        shell: micromamba-shell {0}
+        run: |
+          CXX=x86_64-conda-linux-gnu-g++
+          $CXX --version
+          $CXX -std=c++23 -O2 -static-libstdc++ -static-libgcc "Ex 4/ex4.cpp" -o out/ex4
+          $CXX -std=c++23 -O2 -static-libstdc++ -static-libgcc "Ex 5/ex5.cpp" -o out/ex5
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          out/ask1_pure < "Ex 1/input.txt"
+          out/ask7 < "Ex 7/test1"
+          out/ex4 "Ex 4/test.b"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bin-linux
+          path: out/
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: haskell-actions/setup@v2
+        with:
+          ghc-version: ${{ env.GHC_VERSION }}
+          cabal-version: ${{ env.CABAL_VERSION }}
+
+      - name: Build Haskell programs
+        run: |
+          mkdir -p out
+          (cd "Ex 2-3" && cabal update && cabal install --lib "$QUICKCHECK" --package-env .)
+          ghc -O "Ex 1/ask1_pure.hs" -o out/ask1_pure.exe
+          ghc -O "Ex 1/ask1_impure.hs" -o out/ask1_impure.exe
+          (cd "Ex 2-3" && ghc -O ask2-3.hs -o ../out/ask2-3.exe)
+          ghc -O "Ex 6/ask6.hs" -o out/ask6.exe
+          ghc -O "Ex 7/ask7.hs" -o out/ask7.exe
+
+      - name: Install GCC 16.2 (WinLibs)
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/winlibs.zip" https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-14.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-16.2.0-mingw-w64ucrt-14.0.0-r1.zip
+          7z x -y -o"$RUNNER_TEMP" "$RUNNER_TEMP/winlibs.zip" > /dev/null
+
+      - name: Build C++ programs
+        run: |
+          CXX="$RUNNER_TEMP/mingw64/bin/g++.exe"
+          "$CXX" --version
+          # The garbage collector marks cells recursively, so give it a larger stack.
+          "$CXX" -std=c++23 -O2 -static "Ex 4/ex4.cpp" -o out/ex4.exe
+          "$CXX" -std=c++23 -O2 -static -Wl,--stack,268435456 "Ex 5/ex5.cpp" -o out/ex5.exe
+
+      - name: Smoke test
+        run: |
+          out/ask1_pure.exe < "Ex 1/input.txt"
+          out/ask7.exe < "Ex 7/test1"
+          out/ex4.exe "Ex 4/test.b"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bin-windows
+          path: out/
+
+  package:
+    needs: [linux, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+
+      - name: Make archives
+        run: |
+          VERSION=${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
+          mkdir dist
+          for PLATFORM in linux windows; do
+            BIN="bin-$PLATFORM"
+            EXT=""
+            [ "$PLATFORM" = windows ] && EXT=".exe"
+            NAME="pl-exercises-$VERSION-$PLATFORM-x86_64"
+            D="stage/$NAME"
+            mkdir -p "$D/ex1" "$D/ex2-3" "$D/ex4" "$D/ex5" "$D/ex6" "$D/ex7"
+            cp "$BIN/ask1_pure$EXT" "$BIN/ask1_impure$EXT" "Ex 1/input.txt" "$D/ex1/"
+            cp "$BIN/ask2-3$EXT" "$D/ex2-3/"
+            cp "$BIN/ex4$EXT" "Ex 4/test.b" "$D/ex4/"
+            cp "$BIN/ex5$EXT" "Ex 5/pp.b" "$D/ex5/"
+            cp "$BIN/ask6$EXT" "Ex 6/input.txt" "$D/ex6/"
+            cp "$BIN/ask7$EXT" "Ex 7/test1" "Ex 7/test2" "$D/ex7/"
+            cp release/HOW-TO-RUN.txt "$D/"
+            if [ "$PLATFORM" = linux ]; then
+              chmod +x "$D"/ex*/ask* "$D/ex4/ex4" "$D/ex5/ex5"
+              tar -C stage -czf "dist/$NAME.tar.gz" "$NAME"
+            else
+              (cd stage && zip -qr "../dist/$NAME.zip" "$NAME")
+            fi
+          done
+          ls -l dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: archives
+          path: dist/
+
+      - name: Publish release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v3
+        with:
+          files: dist/*
+          body: >-
+            Prebuilt Linux and Windows x86_64 programs for the runnable exercises:
+            Ex 1, Ex 2-3, Ex 6 and Ex 7 in Haskell (GHC 9.14.1) and the Ex 4 and Ex 5 virtual machines in C++23 (GCC 16.2).
+            Each archive has one folder per exercise with its sample input.
+            Unpack it and follow HOW-TO-RUN.txt, for example ./ex4 test.b in the ex4 folder.

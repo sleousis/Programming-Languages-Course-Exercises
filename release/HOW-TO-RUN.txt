@@ -1,0 +1,37 @@
+Programming Languages II exercises, prebuilt programs
+======================================================
+
+Each folder holds one exercise and the sample input it needs.
+Open a terminal in the folder of the exercise and run the commands below.
+On Windows, add .exe to the program name and use cmd, or in PowerShell
+replace "prog < file" with "Get-Content file | .\prog.exe".
+
+ex1   Count palindromic subsequences (mod 20130401).
+        ./ask1_pure < input.txt
+        ./ask1_impure < input.txt
+      Both print 13.
+
+ex2-3 QuickCheck properties of rose trees and the Bird tree.
+        ./ask2-3
+      All 12 checks print "+++ OK, passed 100 tests."
+
+ex4   Stack-based virtual machine.
+        ./ex4 test.b
+      Prints "Hello world!", a row of stars and the elapsed time.
+
+ex5   The same machine with cons cells and a garbage collector.
+        ./ex5 pp.b
+      Prints lines of dots, each ending in $, then the elapsed time.
+      It takes about half a minute.
+
+ex6   Type inference for the simply typed lambda calculus.
+        ./ask6 < input.txt
+      Prints one type per term, or "type error".
+
+ex7   Interpreter for a small imperative language with lists.
+        ./ask7 < test1
+        ./ask7 < test2
+      test1 prints 42. test2 prints 1 : 2 : 3 : 4 : 5 : 6 : 7 : false.
+
+On Linux, the Haskell programs are static and the C++ ones need glibc 2.28 or newer.
+Source code and details: https://github.com/sleousis/Programming-Languages-Course-Exercises

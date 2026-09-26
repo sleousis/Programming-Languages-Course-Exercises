@@ -15,6 +15,15 @@ Exercises for the Programming Languages II course at NTUA (National Technical Un
 | `Ex 8` | Type systems (theory only, PDF) | none |
 | `Ex 9` | Client that plays a "least deletions to get a palindrome" web quiz, plus a PHP server for it | Python 3, PHP |
 
+## Download
+
+The [Releases page](https://github.com/sleousis/Programming-Languages-Course-Exercises/releases) has prebuilt programs for Ex 1, Ex 2-3, Ex 4, Ex 5, Ex 6 and Ex 7:
+
+- `pl-exercises-<version>-linux-x86_64.tar.gz` for 64-bit Linux. The Haskell programs are static and the C++ ones need glibc 2.28 or newer.
+- `pl-exercises-<version>-windows-x86_64.zip` for 64-bit Windows.
+
+Each archive has one folder per exercise with the program and its sample input. Unpack it and follow `HOW-TO-RUN.txt`. For example, run `./ex4 test.b` in the `ex4` folder, or `ask7.exe < test1` in the `ex7` folder on Windows. The sample inputs of Ex 1 and Ex 6 are also in the repository as `input.txt`.
+
 ## Tech stack
 
 Tested versions (the latest stable releases in September 2026):
@@ -34,11 +43,11 @@ Tested versions (the latest stable releases in September 2026):
 ## Repository layout
 
 ```
-Ex 1/     ask1_pure.hs, ask1_impure.hs, haskell.pdf
+Ex 1/     ask1_pure.hs, ask1_impure.hs, input.txt, haskell.pdf
 Ex 2-3/   ask2-3.hs, haskell23.pdf
 Ex 4/     ex4.cpp, assembler.py, test.asb, test.b, vm.pdf, README.txt
 Ex 5/     ex5.cpp, pp.b, gc.pdf, README.txt
-Ex 6/     ask6.hs, read-typeinfer.hs (course-provided parser), typeinfer.pdf
+Ex 6/     ask6.hs, input.txt, read-typeinfer.hs (course-provided parser), typeinfer.pdf
 Ex 7/     ask7.hs, test1, test2, densem.hs (course-provided), densem-syntax.hs (draft), PDFs, README.txt
 Ex 8/     PDFs only
 Ex 9/     client.py, palseq.php, requirements.txt, script.pdf, README.txt
